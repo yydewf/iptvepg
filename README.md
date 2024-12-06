@@ -10,6 +10,7 @@ java -jar iptvepg.jar
 
 ## 配置文件(config.properties)说明
 output.directory=C:\\tmp: 节目单文件保存目录，默认C:\tmp，请修改成实际节目单保存目录，比如 /var/www/epg  
+keep.json=0: 是否保存支持json接口的节目单文件(by 频道 by 日期)。默认不保存，只生成xmltv文件  
 epg.old=6: 抓取保存历史节目单天数，默认前6天  
 epg.new=2: 抓取保存未来节目单天数，默认后2天  
 epg.keep=10: 节目单总保存天数，默认保存10天。运行时自动清除过期节目单文件  
