@@ -156,6 +156,7 @@ public class EPGScheduler {
     private static final String EPG_API_URL_TEMPLATE = "http://210.13.21.3/schedules/%s_%s.json";
     private static final String CCTV_EPG_API_URL_TEMPLATE = "https://api.cntv.cn/epg/epginfo?serviceId=shiyi&d=%s&c=%s";
     private static String OUTPUT_DIRECTORY;
+    private static int KEEP_JSON;
     private static int OLD_EPG_DAYS;
     private static int NEW_EPG_DAYS;
     private static int KEEP_EPG_DAYS;
@@ -188,6 +189,8 @@ public class EPGScheduler {
             if (OUTPUT_DIRECTORY == null || OUTPUT_DIRECTORY.isEmpty()) {
                 throw new IllegalArgumentException("Output directory is not specified in the configuration file");
             }
+            KEEP_JSON = Integer.parseInt(properties.getProperty("keep.json"));
+
             OLD_EPG_DAYS = Integer.parseInt(properties.getProperty("epg.old"));
             if (OLD_EPG_DAYS < 0) OLD_EPG_DAYS = 0;
             NEW_EPG_DAYS = Integer.parseInt(properties.getProperty("epg.new"));
@@ -221,7 +224,7 @@ public class EPGScheduler {
                         epgData = fetchEPGData(channel.getChannelId(), date);
                         programs = parseEPGData(epgData);
                     }
-                    saveAsJSON(channel, date, programs);
+                    if (KEEP_JSON == 1) saveAsJSON(channel, date, programs);
                     allChannelPrograms.add(new ChannelPrograms(channel, date, programs));
                 } catch (Exception e) {
                     e.printStackTrace();
