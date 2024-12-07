@@ -16,8 +16,8 @@ epg.new=2: 抓取保存未来节目单天数，默认后2天
 epg.keep=10: 节目单总保存天数，默认保存10天。运行时自动清除过期节目单文件  
 
 ## 电子节目单服务
-xmltv节目单文件(e.xml及e.xml.gz)可以直接链接到web服务器目录下访问即可。支持Tivimate、Kodi等应用。 e.g., https://la.ytwg.xyz/epg/e.xml.gz  
-json接口节目单可使用epg.php提供，需要部署到支持php的web服务器。默认节目单目录为/var/www/epg。支持DIPY、Tivibox等应用。 e.g., https://la.ytwg.xyz/epg.php?ch={name}&date={date}  
+xmltv节目单文件(e.xml及e.xml.gz)可以直接链接到web服务器目录下访问即可。支持Tivimate、Kodi等应用。 e.g., https://xxx.xxx.xxx/e.xml.gz  
+json接口节目单可使用epg.php提供，需要部署到支持php的web服务器。默认节目单目录为/var/www/epg。支持DIPY、Tivibox等应用。 e.g., https://xxx.xxx.xxx/epg.php?ch={name}&date={date}  
 
 ## 频道列表
 
