@@ -152,13 +152,16 @@ public class EPGScheduler {
             new Channel(376, "00000001000000050000000000000525", "动作影院"),
             new Channel(377, "00000001000000050000000000000526", "家庭影院"),
             new Channel(378, "00000001000000050000000000000527", "星影"),
+//            new Channel(401, "00000001000000050000000000000545", "爱上4K"),
             new Channel(406, "00000001000000050000000000000635", "广东卫视4K"),
-            new Channel(408, "00000001000000050000000000000637", "深圳卫视4K")
-//            new Channel(401, "00000001000000050000000000000545", "爱上4K")
+            new Channel(408, "00000001000000050000000000000637", "深圳卫视4K"),
+            new Channel(1001, "phtvNews", "凤凰资讯"),
+            new Channel(1002, "phtvChinese", "凤凰中文")
     );
 
     private static final String EPG_API_URL_TEMPLATE = "http://210.13.21.3/schedules/%s_%s.json";
     private static final String CCTV_EPG_API_URL_TEMPLATE = "https://api.cntv.cn/epg/epginfo?serviceId=shiyi&d=%s&c=%s";
+    private static final String PHTV_EPG_API_URL_TEMPLATE = "https://nine.ifeng.com/phtvperiodlist?from=%s&to=%s";
     private static String OUTPUT_DIRECTORY;
     private static int KEEP_JSON;
     private static int OLD_EPG_DAYS;
@@ -224,7 +227,14 @@ public class EPGScheduler {
                     if (channel.getChannelNumber() == 18) {
                         epgData = fetchEPGDataCCTV("cctv5plus", date);
                         programs = parseEPGDataCCTV(epgData, "cctv5plus", date);
-                    } else {
+                    } else if (channel.getChannelNumber() == 1001) {
+                        epgData = fetchEPGDataPHTV("phtvNews", date);
+                        programs = parseEPGDataPHTV(epgData, "phtvNews", date);
+                    } else if (channel.getChannelNumber() == 1002) {
+                        epgData = fetchEPGDataPHTV("phtvChinese", date);
+                        programs = parseEPGDataPHTV(epgData, "phtvChinese", date);
+                    }
+                    else {
                         epgData = fetchEPGData(channel.getChannelId(), date);
                         programs = parseEPGData(epgData);
                     }
@@ -278,6 +288,26 @@ public class EPGScheduler {
         return content.toString();
     }
 
+    private static String fetchEPGDataPHTV(String channelId, String date) throws Exception {
+        String dateStr = date.substring(0,4) + "-" + date.substring(4,6) + "-" + date.substring(6,8);
+        String apiUrl = String.format(PHTV_EPG_API_URL_TEMPLATE, dateStr, dateStr);
+        URL url = new URL(apiUrl);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        String inputLine;
+        StringBuilder content = new StringBuilder();
+        while ((inputLine = in.readLine()) != null) {
+            content.append(inputLine);
+        }
+
+        in.close();
+        conn.disconnect();
+
+        return content.toString();
+    }
+
     private static List<Program> parseEPGData(String epgData) {
         List<Program> programs = new ArrayList<>();
         JSONArray jsonArray = new JSONObject(epgData).getJSONArray("schedules");
@@ -305,6 +335,27 @@ public class EPGScheduler {
             } else {
                 JSONObject jsonProgramN = jsonArray.getJSONObject(i+1);
                 endTime = date.substring(0,4) + "-" + date.substring(4,6) + "-" + date.substring(6,8) + " " + jsonProgramN.getString("showTime") + ":00";
+            }
+            programs.add(new Program(title, startTime, endTime));
+        }
+        return programs;
+    }
+
+    private static List<Program> parseEPGDataPHTV(String epgData, String name, String date) {
+        String dateStr = date.substring(0,4) + "-" + date.substring(4,6) + "-" + date.substring(6,8);
+        List<Program> programs = new ArrayList<>();
+        JSONArray jsonArray = new JSONObject(epgData).getJSONObject("data").getJSONObject(dateStr).getJSONArray(name);
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonProgram = jsonArray.getJSONObject(i);
+            String title = jsonProgram.getString("title");
+            String startTime = date.substring(0,4) + "-" + date.substring(4,6) + "-" + date.substring(6,8) + " " + jsonProgram.getString("time") + ":00";
+            String endTime;
+            if (i == jsonArray.length() - 1) {
+                String nextDate = nextDay(date);
+                endTime = nextDate.substring(0,4) + "-" + nextDate.substring(4,6) + "-" + nextDate.substring(6,8) + " 00:00:00";
+            } else {
+                JSONObject jsonProgramN = jsonArray.getJSONObject(i+1);
+                endTime = date.substring(0,4) + "-" + date.substring(4,6) + "-" + date.substring(6,8) + " " + jsonProgramN.getString("time") + ":00";
             }
             programs.add(new Program(title, startTime, endTime));
         }
