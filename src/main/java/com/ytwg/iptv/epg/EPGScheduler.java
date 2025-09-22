@@ -155,11 +155,12 @@ public class EPGScheduler {
             new Channel(401, "00000001000000050000000000000545", "爱上4K"),
             new Channel(406, "00000001000000050000000000000635", "广东卫视4K"),
             new Channel(408, "00000001000000050000000000000637", "深圳卫视4K"),
+            new Channel(1000, "cctv8k", "CCTV8K"),
             new Channel(1001, "phtvNews", "凤凰资讯"),
             new Channel(1002, "phtvChinese", "凤凰中文")
     );
 
-    private static final String EPG_API_URL_TEMPLATE = "http://210.13.21.3/schedules/%s_%s.json";
+    private static final String EPG_API_URL_TEMPLATE = "http://%s/schedules/%s_%s.json";
     private static final String CCTV_EPG_API_URL_TEMPLATE = "https://api.cntv.cn/epg/epginfo?serviceId=shiyi&d=%s&c=%s";
     private static final String PHTV_EPG_API_URL_TEMPLATE = "https://nine.ifeng.com/phtvperiodlist?from=%s&to=%s";
     private static String OUTPUT_DIRECTORY;
@@ -167,6 +168,7 @@ public class EPGScheduler {
     private static int OLD_EPG_DAYS;
     private static int NEW_EPG_DAYS;
     private static int KEEP_EPG_DAYS;
+    private static String EPG_SITE;
 
     public static void main(String[] args) {
         try {
@@ -195,6 +197,10 @@ public class EPGScheduler {
             OUTPUT_DIRECTORY = properties.getProperty("output.directory");
             if (OUTPUT_DIRECTORY == null || OUTPUT_DIRECTORY.isEmpty()) {
                 throw new IllegalArgumentException("Output directory is not specified in the configuration file");
+            }
+            EPG_SITE = properties.getProperty("epg.site");
+            if (EPG_SITE == null || EPG_SITE.isEmpty()) {
+                throw new IllegalArgumentException("Epg site is not specified in the configuration file");
             }
             KEEP_JSON = Integer.parseInt(properties.getProperty("keep.json"));
 
@@ -227,6 +233,9 @@ public class EPGScheduler {
                     if (channel.getChannelNumber() == 18) {
                         epgData = fetchEPGDataCCTV("cctv5plus", date);
                         programs = parseEPGDataCCTV(epgData, "cctv5plus", date);
+                    } else if (channel.getChannelNumber() == 1000) {
+                        epgData = fetchEPGDataCCTV("cctv8k", date);
+                        programs = parseEPGDataCCTV(epgData, "cctv8k", date);
                     } else if (channel.getChannelNumber() == 1001) {
                         epgData = fetchEPGDataPHTV("phtvNews", date);
                         programs = parseEPGDataPHTV(epgData, "phtvNews", date);
@@ -251,7 +260,7 @@ public class EPGScheduler {
     }
 
     private static String fetchEPGData(String channelId, String date) throws Exception {
-        String apiUrl = String.format(EPG_API_URL_TEMPLATE, channelId, date);
+        String apiUrl = String.format(EPG_API_URL_TEMPLATE, EPG_SITE, channelId, date);
         URL url = new URL(apiUrl);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
